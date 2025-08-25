@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Calculate Change (Undo Enabled)</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 1.25rem; }
+        .container { max-width: 480px; margin: 0 auto; }
+        label, input, button { display:block; margin: 0.4rem 0; }
+        pre { background:#f7f7f7; padding:0.75rem; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Calculate Change</h2>
+        <form id="changeForm" onsubmit="return calculateChange(event)">
+            <label for="amount">Enter Amount (e.g. 12.34):</label>
+            <input type="number" id="amount" step="0.01" min="0" required />
+            <button type="submit">Submit</button>
+            <button type="button" onclick="undoLast()">Back</button>
+        </form>
+        <pre id="result"></pre>
+    </div>
+
+    <script>
+    let lastAmount = null;
+    let lastOutput = null;
+
+    function validateInput(id) {
+        var el = document.getElementById(id);
+        var value = el.value;
+        if (id === 'amount') {
+            if (value === '' || isNaN(value)) {
+                alert('Please enter a valid number for amount.');
+                el.focus();
+                return false;
+            }
+            var num = Number(value);
+            if (num < 0 || num > 1000000) {
+                alert('amount must be between 0 and 1000000.');
+                el.focus();
+                return false;
+            }
+        }
+        
+        return true;
+        var el = document.getElementById(id);
+        var value = el.value;
+        if (value === '' || isNaN(value) || Number(value) < 0) {
+            alert('Please enter a valid non-negative number.');
+            el.focus();
+            return false;
+        }
+        return true;
+    }
+
+    function calculateChange(event) {
+        if (event && event.preventDefault) event.preventDefault();
+        if (!validateInput('amount')) return false;
+        if (!confirm('Confirm?')) return false;
+
+        // Store current before overwriting
+        lastAmount = document.getElementById('amount').value;
+        lastOutput = document.getElementById('result').textContent;
+
+        var amount = parseFloat(lastAmount);
+        var cents = Math.round(amount * 100);
+
+        var denominations = [
+            {name: '$100', value: 10000},
+            {name: '$50', value: 5000},
+            {name: '$20', value: 2000},
+            {name: '$10', value: 1000},
+            {name: '$5', value: 500},
+            {name: '$1', value: 100},
+            {name: '25¢', value: 25},
+            {name: '10¢', value: 10},
+            {name: '5¢', value: 5},
+            {name: '1¢', value: 1}
+        ];
+
+        var output = [];
+        for (var i = 0; i < denominations.length; i++) {
+            var d = denominations[i];
+            var count = Math.floor(cents / d.value);
+            if (count > 0) {
+                output.push(d.name + ': ' + count);
+                cents -= count * d.value;
+            }
+        }
+
+        if (output.length === 0) output.push('No currency needed (entered 0).');
+        document.getElementById('result').textContent = output.join('\n');
+        return false;
+    }
+
+    function undoLast() {
+        if (lastAmount !== null || lastOutput !== null) {
+            document.getElementById('amount').value = lastAmount || '';
+            document.getElementById('result').textContent = lastOutput || '';
+        }
+    }
+    </script>
+</body>
+</html>
